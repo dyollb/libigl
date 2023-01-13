@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
 	std::vector<std::string> paths = {
 		"F:/Data/_DirectDeltaMush/ella/ella",
-		"F:/Dropbox/Work/Data/Fats_obese_dancing/fats-new",
+		"F:/Data/_DirectDeltaMush/fats/fats",
 		"F:/Data/_DirectDeltaMush/fats-muscle/fats",
 		"F:/Data/_DirectDeltaMush/ella-base/ella",
 		"F:/Data/_DirectDeltaMush/fats-base/fats",
