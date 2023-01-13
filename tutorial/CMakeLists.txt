@@ -62,6 +62,9 @@ if(LIBIGL_TUTORIALS_CHAPTER4)
     igl_add_tutorial(407_BiharmonicCoordinates igl::glfw)
     igl_add_tutorial(408_DirectDeltaMush igl::glfw)
     igl_add_tutorial(409_Kelvinlets igl::imgui)
+    igl_add_tutorial(4xx_BBW_LBS_grid igl::glfw)
+    igl_add_tutorial(4xx_ReverseEngineerAnimation igl::glfw)
+    igl_add_tutorial(4xx_ExtractPose igl::glfw)
 endif()
 
 # Chapter 5

@@ -15,4 +15,6 @@ function(igl_add_tutorial name)
     )
 
     set_target_properties(${name} PROPERTIES FOLDER Libigl_Tutorials)
+    set_target_properties(${name} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES
+)
 endfunction()

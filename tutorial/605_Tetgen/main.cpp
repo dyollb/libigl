@@ -1,11 +1,16 @@
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
-#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
+#include <igl/readTGF.h>
+#include <igl/writeMESH.h>
+#include <igl/writeOBJ.h>
 #include <igl/barycenter.h>
+#include <igl/matrix_to_list.h>
+#include <igl/list_to_matrix.h>
 
 
 // Input polygon
-Eigen::MatrixXd V;
+Eigen::MatrixXd V, VA;
 Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 
@@ -13,6 +18,9 @@ Eigen::MatrixXd B;
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
 Eigen::MatrixXi TF;
+
+Eigen::MatrixXd C;
+Eigen::MatrixXi BE;
 
 // This function is called every time a keyboard button is pressed
 bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier)
@@ -63,10 +71,55 @@ int main(int argc, char *argv[])
   using namespace std;
 
   // Load a surface mesh
-  igl::readOFF(TUTORIAL_SHARED_PATH "/fertility.off",V,F);
+  igl::readOBJ("F:/Data/_DirectDeltaMush/ella/ella.obj",V,F);
+  igl::readTGF("F:/Data/_DirectDeltaMush/ella/ella.tgf", C, BE);
+
+  VA.resize(V.rows() + C.rows(), V.cols());
+  VA << V, C;
+
+  std::vector<std::vector<double> > vV;
+  std::vector<std::vector<int> > vF;
+  std::vector<std::vector<int> > vBE;
+  igl::matrix_to_list(VA, vV);
+  igl::matrix_to_list(F, vF);
+
+  //MatrixXi I; I.resize(C.rows(), 1);
+  //for (Index i = 0; i < C.rows(); ++i)
+  //    I(i) = V.rows() + i;
+  BE += V.rows() * MatrixXi::Ones(BE.rows(), BE.cols());
+  igl::matrix_to_list(BE, vBE);
+  vF.insert(vF.end(), vBE.begin(), vBE.end());
+
+
+  std::vector<std::vector<double> > vTV;
+  std::vector<std::vector<int> > vTT;
+  std::vector<std::vector<int> > vTF;
 
   // Tetrahedralize the interior
-  igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+  igl::copyleft::tetgen::tetrahedralize(vV,vF,"pq1.6", vTV,vTT,vTF);
+
+  igl::list_to_matrix(vTV, TV);
+  igl::list_to_matrix(vTT, TT);
+  igl::list_to_matrix(vTF, TF);
+
+  for (int p = 0; p < C.rows(); p++)
+  {
+	  VectorXd pos = C.row(p);
+	  // loop over domain vertices
+
+	  for (int i = 0; i < TV.rows(); i++)
+	  {
+		  VectorXd vi = TV.row(i);
+		  double sqrd = (vi - pos).squaredNorm();
+		  if (sqrd <= 1e-8)
+		  {
+              std::cout << p << ": " << sqrd << "\n";
+		  }
+	  }
+  }
+
+
+  igl::writeMESH("F:/Data/_DirectDeltaMush/ella/ella.mesh", TV, TT, TF);
 
   // Compute barycenters
   igl::barycenter(TV,TT,B);

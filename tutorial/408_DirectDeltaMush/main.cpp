@@ -1,8 +1,10 @@
 #include <igl/read_triangle_mesh.h>
 #include <igl/readTGF.h>
 #include <igl/readDMAT.h>
+#include <igl/readMESH.h>
 #include <igl/lbs_matrix.h>
 #include <igl/deform_skeleton.h>
+#include <igl/normalize_row_sums.h>
 #include <igl/direct_delta_mush.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <Eigen/Geometry>
@@ -10,38 +12,64 @@
 
 int main(int argc, char * argv[]) 
 {
+	int p = 50;
+	float lambda = 3; // 0 < lambda
+	float kappa = 1; // 0 < kappa < lambda
+	float alpha = 0.8; // 0 <= alpha < 1
+    bool disable_ddm = true;
+
+	if (argc > 1)
+	{
+		lambda = atof(argv[1]);
+	}
+	if (argc > 2)
+	{
+		kappa = atof(argv[2]);
+	}
+	if (argc > 3)
+	{
+		alpha = atof(argv[3]);
+	}
+	std::cerr << "p * lambda : " << p * lambda << "\n";
+	std::cerr << "p * kappa : " << p * kappa << "\n";
+	std::cerr << "alpha : " << alpha << "\n";
 
   Eigen::MatrixXd V,U,C,W,T,M,Omega;
-  Eigen::MatrixXi F,BE;
-  igl::read_triangle_mesh(TUTORIAL_SHARED_PATH "/elephant.obj",V,F);
-  igl::readTGF(           TUTORIAL_SHARED_PATH "/elephant.tgf",C,BE);
-  igl::readDMAT(          TUTORIAL_SHARED_PATH "/elephant-weights.dmat",W);
-  igl::readDMAT(          TUTORIAL_SHARED_PATH "/elephant-anim.dmat",T);
-  // convert weight to piecewise-rigid weights to stress test DDM
-  for (int i = 0; i < W.rows(); ++i)
-  {
-    int maxj;
-    W.row(i).maxCoeff(&maxj);
-    for (int j = 0; j < W.cols(); j++)
-    {
-      W(i, j) = double(maxj == j);
-    }
-  }
+  Eigen::MatrixXi F,BE, _T;
+  igl::readMESH("F:/Data/_DirectDeltaMush/ella/ella.mesh",V,_T,F);
+  Eigen::MatrixXi _F2 = F.col(2);
+  F.col(2) = F.col(1);
+  F.col(1) = _F2;
+  igl::readTGF(           "F:/Data/_DirectDeltaMush/ella/ella.tgf",C,BE);
+  igl::readDMAT(          "F:/Data/_DirectDeltaMush/ella/ella-weights.dmat",W);
+  igl::readDMAT(          "F:/Data/_DirectDeltaMush/ella/ella-anim.dmat",T);
 
+  igl::normalize_row_sums(W, W);
   igl::lbs_matrix(V,W,M);
 
-  int p = 20;
-  float lambda = 3; // 0 < lambda
-  float kappa = 1; // 0 < kappa < lambda
-  float alpha = 0.8; // 0 <= alpha < 1
-  igl::direct_delta_mush_precomputation(V, F,W, p, lambda, kappa, alpha, Omega);
+  if (!disable_ddm)
+  {
+	  // convert weight to piecewise-rigid weights to stress test DDM
+	  for (int i = 0; i < W.rows(); ++i)
+	  {
+		  int maxj;
+		  W.row(i).maxCoeff(&maxj);
+		  for (int j = 0; j < W.cols(); j++)
+		  {
+			  W(i, j) = double(maxj == j);
+		  }
+	  }
+	  igl::direct_delta_mush_precomputation(V, F, W, p, lambda, kappa, alpha, Omega);
+  }
 
   igl::opengl::glfw::Viewer viewer;
+  viewer.core().background_color << 0.2f, 0.2f, 0.2f, 1.0f;
   int frame = 0;
   const int pr_id = viewer.selected_data_index;
   viewer.append_mesh();
   const int ddm_id = viewer.selected_data_index;
   Eigen::RowVector3d offset(1.1*(V.col(0).maxCoeff()-V.col(0).minCoeff()),0,0);
+  //Eigen::RowVector3d offset(0, 0, 0);
 
   viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer &) -> bool
   {
@@ -59,6 +87,7 @@ int main(int argc, char * argv[])
       viewer.data(pr_id).set_vertices(U);
       viewer.data(pr_id).compute_normals();
 
+      if (!disable_ddm)
       {
         std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> 
           T_list(BE.rows());
@@ -69,7 +98,7 @@ int main(int argc, char * argv[])
         }
         igl::direct_delta_mush(V, T_list, Omega, U);
       }
-      U.rowwise() += offset;
+      U.rowwise() += 2*offset;
       viewer.data(ddm_id).set_vertices(U);
       viewer.data(ddm_id).compute_normals();
 
@@ -100,11 +129,13 @@ int main(int argc, char * argv[])
     if(id == pr_id)
     {
       viewer.data(id).set_mesh( (V.rowwise()-offset*1.0).eval() ,F);
-      viewer.data(id).set_colors(Eigen::RowVector3d(214./255.,170./255.,148./255.));
+	  //viewer.data(id).set_colors(Eigen::RowVector3d(132. / 255., 214. / 255., 105. / 255.));
+	  viewer.data(id).set_colors(Eigen::RowVector3d(214. / 255., 170. / 255., 148. / 255.));
       viewer.data(id).set_edges(C,BE, Eigen::RowVector3d(1,1,1));
     }else if(id == ddm_id){
       viewer.data(id).set_mesh( (V.rowwise()+offset*1.0).eval() ,F);
-      viewer.data(id).set_colors(Eigen::RowVector3d(132./255.,214./255.,105./255.));
+	  viewer.data(id).set_colors(Eigen::RowVector3d(214. / 255., 170. / 255., 148. / 255.));
+	  //viewer.data(id).set_visible(false);
     }
     viewer.data(id).show_lines = false;
     viewer.data(id).set_face_based(true);
@@ -112,7 +143,6 @@ int main(int argc, char * argv[])
   }
   viewer.core().is_animating = false;
   viewer.core().animation_max_fps = 24.;
-  //viewer.data().set_colors(V,F);
 
 
   viewer.launch_init();
