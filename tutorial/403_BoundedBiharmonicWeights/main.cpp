@@ -105,11 +105,10 @@ int main(int argc, char* argv[])
 	using namespace Eigen;
 	using namespace std;
 
-	igl::readMESH("F:/Data/_DirectDeltaMush/ella/ella.mesh", V, T, F);
-	//igl::readMESH(TUTORIAL_SHARED_PATH "/hand.mesh",V,T,F);
+	igl::readMESH("F:/Data/_DirectDeltaMush/fats-muscle/fats.mesh", V, T, F);
+	igl::readTGF("F:/Data/_DirectDeltaMush/fats-muscle/fats.tgf", C, BE);
 	U = V;
-	igl::readTGF("F:/Data/_DirectDeltaMush/ella/ella.tgf", C, BE);
-	//igl::readTGF(TUTORIAL_SHARED_PATH "/hand.tgf",C,BE);
+
 	// retrieve parents for forward kinematics
 	igl::directed_edge_parents(BE, P);
 
@@ -153,7 +152,7 @@ int main(int argc, char* argv[])
 	igl::writeDMAT("F:/Dropbox/Work/Data/Fats_obese_dancing/fats-weights.dmat", NW);
 #else
 	igl::normalize_row_sums(W, W);
-	igl::writeDMAT("F:/Data/_DirectDeltaMush/ella/ella-weights.dmat", W);
+	igl::writeDMAT("F:/Data/_DirectDeltaMush/fats-muscle/fats-weights.dmat", W);
 #endif
 	//return 0;
 

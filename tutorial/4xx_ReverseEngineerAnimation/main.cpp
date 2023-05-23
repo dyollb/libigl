@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	igl::readTGF("F:/Data/_DirectDeltaMush/elephant/elephant.tgf", Cin, BEin);
 	igl::readDMAT("F:/Data/_DirectDeltaMush/elephant/elephant-anim.dmat", Tin);
 
-	igl::readTGF("F:/Data/_DirectDeltaMush/ella/ella.tgf", Cout, BEout);
+	igl::readTGF("F:/Data/_DirectDeltaMush/fats-muscle/fats.tgf", Cout, BEout);
 
 	// retrieve parents for forward kinematics
 	igl::directed_edge_parents(BEin, P);
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	igl::writeDMAT("F:/Data/_DirectDeltaMush/ella/ella-anim.dmat", Tout);
+	igl::writeDMAT("F:/Data/_DirectDeltaMush/fats-muscle/fats-anim.dmat", Tout);
 
 	return EXIT_SUCCESS;
 }

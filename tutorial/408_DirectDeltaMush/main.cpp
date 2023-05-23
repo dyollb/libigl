@@ -36,13 +36,13 @@ int main(int argc, char * argv[])
 
   Eigen::MatrixXd V,U,C,W,T,M,Omega;
   Eigen::MatrixXi F,BE, _T;
-  igl::readMESH("F:/Data/_DirectDeltaMush/ella/ella.mesh",V,_T,F);
+  igl::readMESH("F:/Data/_DirectDeltaMush/fats-muscle/fats.mesh",V,_T,F);
   Eigen::MatrixXi _F2 = F.col(2);
   F.col(2) = F.col(1);
   F.col(1) = _F2;
-  igl::readTGF(           "F:/Data/_DirectDeltaMush/ella/ella.tgf",C,BE);
-  igl::readDMAT(          "F:/Data/_DirectDeltaMush/ella/ella-weights.dmat",W);
-  igl::readDMAT(          "F:/Data/_DirectDeltaMush/ella/ella-anim.dmat",T);
+  igl::readTGF("F:/Data/_DirectDeltaMush/fats-muscle/fats.tgf", C, BE);
+  igl::readDMAT("F:/Data/_DirectDeltaMush/fats-muscle/fats-weights.dmat", W);
+  igl::readDMAT("F:/Data/_DirectDeltaMush/fats-muscle/fats-anim.dmat", T);
 
   igl::normalize_row_sums(W, W);
   igl::lbs_matrix(V,W,M);

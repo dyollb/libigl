@@ -2,6 +2,7 @@
 #include <igl/readTGF.h>
 #include <igl/readDMAT.h>
 #include <igl/readMESH.h>
+#include <igl/writeMESH.h>
 #include <igl/lbs_matrix.h>
 #include <igl/deform_skeleton.h>
 #include <igl/normalize_row_sums.h>
@@ -15,15 +16,15 @@ int main(int argc, char* argv[])
 	struct ModelData
 	{
 		Eigen::MatrixXd V, U, T, M;
-		Eigen::MatrixXi F;
+		Eigen::MatrixXi F, C;
 		Eigen::RowVector3d offset;
 		Eigen::Index num_handles = 0;
 		size_t id = -1;
 	};
 
 	std::vector<std::string> paths = {
-		"F:/Data/_DirectDeltaMush/ella/ella",
 		"F:/Data/_DirectDeltaMush/fats/fats",
+		"F:/Data/_DirectDeltaMush/ella/ella",
 		"F:/Data/_DirectDeltaMush/fats-muscle/fats",
 		"F:/Data/_DirectDeltaMush/ella-base/ella",
 		"F:/Data/_DirectDeltaMush/fats-base/fats",
@@ -34,10 +35,9 @@ int main(int argc, char* argv[])
 	for (const auto& prefix : paths)
 	{
 		auto& m = models.emplace_back();
-		Eigen::MatrixXi T;
 		Eigen::MatrixXd W;
 
-		igl::readMESH(prefix + ".mesh", m.V, T, m.F);
+		igl::readMESH(prefix + ".mesh", m.V, m.C, m.F);
 		igl::readDMAT(prefix + "-weights.dmat", W);
 		igl::readDMAT(prefix + "-anim.dmat", m.T);
 
@@ -54,21 +54,27 @@ int main(int argc, char* argv[])
 
 	// setup layout
 	const auto& m1 = models.front();
-	Eigen::RowVector3d offset_x(1.1 * (m1.V.col(0).maxCoeff() - m1.V.col(0).minCoeff()), 0, 0);
+	Eigen::RowVector3d zero(0, 0, 0);
+	Eigen::RowVector3d offset_x(0.7 * (m1.V.col(0).maxCoeff() - m1.V.col(0).minCoeff()), 0, 0);
 	Eigen::RowVector3d offset_z(0, 0, 1.1 * (m1.V.col(2).maxCoeff() - m1.V.col(2).minCoeff()));
-	models[1].offset -= offset_x;
+	models[0].offset -= offset_x;
+	models[1].offset += zero;
 	models[2].offset += offset_x;
-	models[3].offset += 0.5 * offset_x + offset_z;
-	models[4].offset += 1.5 * offset_x + offset_z;
+	models[3].offset += offset_z - 0.5 * offset_x;
+	models[4].offset += offset_z + 0.5 * offset_x;
 
 	igl::opengl::glfw::Viewer viewer;
 	viewer.core().background_color << 0.2f, 0.2f, 0.2f, 1.0f;
+	viewer.core().background_color << 0.171875f, 0.203125f, 0.265625f, 1.0f;
 	models[0].id = viewer.selected_data_index;
 	for (size_t i = 1; i < models.size(); ++i)
 	{
 		viewer.append_mesh();
 		models[i].id = viewer.selected_data_index;
 	}
+
+	//std::swap(models[2], models[0]);
+	models.resize(3);
 
 	const int num_frames = m1.T.cols();
 	int frame = 0;
@@ -101,6 +107,10 @@ int main(int argc, char* argv[])
 		{
 		case ' ':
 			viewer.core().is_animating = !viewer.core().is_animating;
+			return true;
+		case 'e':
+			const auto & m = models[2];
+			igl::writeMESH(paths[2] + "_deformed.mesh", m.U, m.C, m.F);
 			return true;
 		}
 		return false;

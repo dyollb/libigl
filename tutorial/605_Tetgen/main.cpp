@@ -71,8 +71,8 @@ int main(int argc, char *argv[])
   using namespace std;
 
   // Load a surface mesh
-  igl::readOBJ("F:/Data/_DirectDeltaMush/ella/ella.obj",V,F);
-  igl::readTGF("F:/Data/_DirectDeltaMush/ella/ella.tgf", C, BE);
+  igl::readOBJ("F:/Data/_DirectDeltaMush/fats-muscle/fats.obj",V,F);
+  igl::readTGF("F:/Data/_DirectDeltaMush/fats-muscle/fats.tgf", C, BE);
 
   VA.resize(V.rows() + C.rows(), V.cols());
   VA << V, C;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
   }
 
 
-  igl::writeMESH("F:/Data/_DirectDeltaMush/ella/ella.mesh", TV, TT, TF);
+  igl::writeMESH("F:/Data/_DirectDeltaMush/fats-muscle/fats.mesh", TV, TT, TF);
 
   // Compute barycenters
   igl::barycenter(TV,TT,B);
